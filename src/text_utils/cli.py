@@ -4,7 +4,7 @@ import argparse
 import sys
 from typing import Optional
 
-from text_utils import cleaner, formatter, regex_tool, line_ops
+from text_utils import cleaner, formatter, regex_tool, line_ops, extractor
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -194,6 +194,47 @@ def create_parser() -> argparse.ArgumentParser:
     number_parser.add_argument("--input-file", help="Input file")
     number_parser.add_argument("--output-file", help="Output file")
 
+    # Extraction commands
+    email_parser = subparsers.add_parser("email", help="Extract email addresses")
+    email_parser.add_argument("input", nargs="?", help="Input text")
+    email_parser.add_argument("--input-file", help="Input file")
+    email_parser.add_argument("--output-file", help="Output file")
+
+    phone_parser = subparsers.add_parser("phone", help="Extract phone numbers")
+    phone_parser.add_argument("input", nargs="?", help="Input text")
+    phone_parser.add_argument(
+        "-r", "--region", default="cn", choices=["cn", "us"], help="Phone region"
+    )
+    phone_parser.add_argument("--input-file", help="Input file")
+    phone_parser.add_argument("--output-file", help="Output file")
+
+    url_parser = subparsers.add_parser("url", help="Extract URLs")
+    url_parser.add_argument("input", nargs="?", help="Input text")
+    url_parser.add_argument("--input-file", help="Input file")
+    url_parser.add_argument("--output-file", help="Output file")
+
+    id_parser = subparsers.add_parser("idcard", help="Extract ID card numbers (China)")
+    id_parser.add_argument("input", nargs="?", help="Input text")
+    id_parser.add_argument("--input-file", help="Input file")
+    id_parser.add_argument("--output-file", help="Output file")
+
+    hashtag_parser = subparsers.add_parser("hashtag", help="Extract hashtags")
+    hashtag_parser.add_argument("input", nargs="?", help="Input text")
+    hashtag_parser.add_argument("--input-file", help="Input file")
+    hashtag_parser.add_argument("--output-file", help="Output file")
+
+    mention_parser = subparsers.add_parser("mention", help="Extract @mentions")
+    mention_parser.add_argument("input", nargs="?", help="Input text")
+    mention_parser.add_argument("--input-file", help="Input file")
+    mention_parser.add_argument("--output-file", help="Output file")
+
+    ip_parser = subparsers.add_parser("ip", help="Extract IP addresses")
+    ip_parser.add_argument("input", nargs="?", help="Input text")
+    ip_parser.add_argument("-4", "--ipv4", action="store_true", help="IPv4 only")
+    ip_parser.add_argument("-6", "--ipv6", action="store_true", help="IPv6 only")
+    ip_parser.add_argument("--input-file", help="Input file")
+    ip_parser.add_argument("--output-file", help="Output file")
+
     return parser
 
 
@@ -369,6 +410,50 @@ def main() -> int:
                 text, start=getattr(args, "start", 1), width=getattr(args, "width", 0)
             )
             write_output(result, args.output_file)
+
+        elif args.command == "email":
+            text = get_input_text(args)
+            result = extractor.extract_emails(text)
+            write_output("\n".join(result), args.output_file)
+
+        elif args.command == "phone":
+            text = get_input_text(args)
+            result = extractor.extract_phones(
+                text, region=getattr(args, "region", "cn")
+            )
+            write_output("\n".join(result), args.output_file)
+
+        elif args.command == "url":
+            text = get_input_text(args)
+            result = extractor.extract_urls(text)
+            write_output("\n".join(result), args.output_file)
+
+        elif args.command == "idcard":
+            text = get_input_text(args)
+            result = extractor.extract_id_cards(text)
+            write_output("\n".join(result), args.output_file)
+
+        elif args.command == "hashtag":
+            text = get_input_text(args)
+            result = extractor.extract_hashtags(text)
+            write_output("\n".join(result), args.output_file)
+
+        elif args.command == "mention":
+            text = get_input_text(args)
+            result = extractor.extract_mentions(text)
+            write_output("\n".join(result), args.output_file)
+
+        elif args.command == "ip":
+            text = get_input_text(args)
+            ipv4_only = getattr(args, "ipv4", False)
+            ipv6_only = getattr(args, "ipv6", False)
+            if ipv4_only:
+                result = extractor.extract_ipv4(text)
+            elif ipv6_only:
+                result = extractor.extract_ipv6(text)
+            else:
+                result = extractor.extract_ipv4(text) + extractor.extract_ipv6(text)
+            write_output("\n".join(result), args.output_file)
 
         else:
             parser.print_help()
