@@ -4,7 +4,7 @@ import argparse
 import sys
 from typing import Optional
 
-from text_utils import cleaner, formatter
+from text_utils import cleaner, formatter, regex_tool
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -100,6 +100,46 @@ def create_parser() -> argparse.ArgumentParser:
     constant_parser.add_argument("input", nargs="?", help="Input text")
     constant_parser.add_argument("-i", "--input-file", help="Input file")
     constant_parser.add_argument("-o", "--output-file", help="Output file")
+
+    # Regex commands
+    grep_parser = subparsers.add_parser(
+        "grep", help="Search for lines matching pattern"
+    )
+    grep_parser.add_argument("pattern", help="Regular expression pattern")
+    grep_parser.add_argument("input", nargs="?", help="Input text")
+    grep_parser.add_argument(
+        "-i", "--ignore-case", action="store_true", help="Ignore case"
+    )
+    grep_parser.add_argument("-v", "--invert", action="store_true", help="Invert match")
+    grep_parser.add_argument("--input-file", help="Input file")
+    grep_parser.add_argument("--output-file", help="Output file")
+
+    replace_parser = subparsers.add_parser("replace", help="Replace pattern with text")
+    replace_parser.add_argument("pattern", help="Regular expression pattern")
+    replace_parser.add_argument(
+        "replacement", help="Replacement text", nargs="?", default=""
+    )
+    replace_parser.add_argument("input", nargs="?", help="Input text")
+    replace_parser.add_argument(
+        "-c", "--count", type=int, default=0, help="Max replacements"
+    )
+    replace_parser.add_argument(
+        "-i", "--ignore-case", action="store_true", help="Ignore case"
+    )
+    replace_parser.add_argument("--input-file", help="Input file")
+    replace_parser.add_argument("--output-file", help="Output file")
+
+    extract_parser = subparsers.add_parser("extract", help="Extract matches from text")
+    extract_parser.add_argument("pattern", help="Regular expression pattern")
+    extract_parser.add_argument("input", nargs="?", help="Input text")
+    extract_parser.add_argument(
+        "-g", "--group", type=int, default=0, help="Capture group"
+    )
+    extract_parser.add_argument(
+        "-i", "--ignore-case", action="store_true", help="Ignore case"
+    )
+    extract_parser.add_argument("--input-file", help="Input file")
+    extract_parser.add_argument("--output-file", help="Output file")
 
     return parser
 
@@ -202,6 +242,37 @@ def main() -> int:
             text = get_input_text(args)
             result = formatter.to_constant_case(text)
             write_output(result, args.output_file)
+
+        elif args.command == "grep":
+            text = get_input_text(args)
+            result = regex_tool.grep(
+                args.pattern,
+                text,
+                ignore_case=getattr(args, "ignore_case", False),
+                invert=getattr(args, "invert", False),
+            )
+            write_output("\n".join(result), args.output_file)
+
+        elif args.command == "replace":
+            text = get_input_text(args)
+            result = regex_tool.replace(
+                args.pattern,
+                text,
+                args.replacement,
+                count=getattr(args, "count", 0),
+                ignore_case=getattr(args, "ignore_case", False),
+            )
+            write_output(result, args.output_file)
+
+        elif args.command == "extract":
+            text = get_input_text(args)
+            result = regex_tool.extract(
+                args.pattern,
+                text,
+                group=getattr(args, "group", 0),
+                ignore_case=getattr(args, "ignore_case", False),
+            )
+            write_output("\n".join(result), args.output_file)
 
         else:
             parser.print_help()
