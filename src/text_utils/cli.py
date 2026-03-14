@@ -4,7 +4,7 @@ import argparse
 import sys
 from typing import Optional
 
-from text_utils import cleaner
+from text_utils import cleaner, formatter
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -64,6 +64,42 @@ def create_parser() -> argparse.ArgumentParser:
     rmempty_parser.add_argument("input", nargs="?", help="Input text")
     rmempty_parser.add_argument("-i", "--input-file", help="Input file")
     rmempty_parser.add_argument("-o", "--output-file", help="Output file")
+
+    # Format commands
+    upper_parser = subparsers.add_parser("upper", help="Convert to uppercase")
+    upper_parser.add_argument("input", nargs="?", help="Input text")
+    upper_parser.add_argument("-i", "--input-file", help="Input file")
+    upper_parser.add_argument("-o", "--output-file", help="Output file")
+
+    lower_parser = subparsers.add_parser("lower", help="Convert to lowercase")
+    lower_parser.add_argument("input", nargs="?", help="Input text")
+    lower_parser.add_argument("-i", "--input-file", help="Input file")
+    lower_parser.add_argument("-o", "--output-file", help="Output file")
+
+    title_parser = subparsers.add_parser("title", help="Convert to title case")
+    title_parser.add_argument("input", nargs="?", help="Input text")
+    title_parser.add_argument("-i", "--input-file", help="Input file")
+    title_parser.add_argument("-o", "--output-file", help="Output file")
+
+    camel_parser = subparsers.add_parser("camel", help="Convert to camelCase")
+    camel_parser.add_argument("input", nargs="?", help="Input text")
+    camel_parser.add_argument("-i", "--input-file", help="Input file")
+    camel_parser.add_argument("-o", "--output-file", help="Output file")
+
+    snake_parser = subparsers.add_parser("snake", help="Convert to snake_case")
+    snake_parser.add_argument("input", nargs="?", help="Input text")
+    snake_parser.add_argument("-i", "--input-file", help="Input file")
+    snake_parser.add_argument("-o", "--output-file", help="Output file")
+
+    kebab_parser = subparsers.add_parser("kebab", help="Convert to kebab-case")
+    kebab_parser.add_argument("input", nargs="?", help="Input text")
+    kebab_parser.add_argument("-i", "--input-file", help="Input file")
+    kebab_parser.add_argument("-o", "--output-file", help="Output file")
+
+    constant_parser = subparsers.add_parser("constant", help="Convert to CONSTANT_CASE")
+    constant_parser.add_argument("input", nargs="?", help="Input text")
+    constant_parser.add_argument("-i", "--input-file", help="Input file")
+    constant_parser.add_argument("-o", "--output-file", help="Output file")
 
     return parser
 
@@ -130,6 +166,41 @@ def main() -> int:
         elif args.command == "rmempty":
             text = get_input_text(args)
             result = cleaner.remove_empty_lines(text)
+            write_output(result, args.output_file)
+
+        elif args.command == "upper":
+            text = get_input_text(args)
+            result = formatter.to_upper(text)
+            write_output(result, args.output_file)
+
+        elif args.command == "lower":
+            text = get_input_text(args)
+            result = formatter.to_lower(text)
+            write_output(result, args.output_file)
+
+        elif args.command == "title":
+            text = get_input_text(args)
+            result = formatter.to_title(text)
+            write_output(result, args.output_file)
+
+        elif args.command == "camel":
+            text = get_input_text(args)
+            result = formatter.to_camel_case(text)
+            write_output(result, args.output_file)
+
+        elif args.command == "snake":
+            text = get_input_text(args)
+            result = formatter.to_snake_case(text)
+            write_output(result, args.output_file)
+
+        elif args.command == "kebab":
+            text = get_input_text(args)
+            result = formatter.to_kebab_case(text)
+            write_output(result, args.output_file)
+
+        elif args.command == "constant":
+            text = get_input_text(args)
+            result = formatter.to_constant_case(text)
             write_output(result, args.output_file)
 
         else:
