@@ -37,6 +37,33 @@ class TestCollapseSpaces:
     def test_collapse_tabs(self):
         assert cleaner.collapse_spaces("hello\tworld") == "hello\tworld"
 
+    def test_collapse_fullwidth_space(self):
+        assert cleaner.collapse_spaces("hello\u3000world") == "hello world"
+
+    def test_collapse_multiple_fullwidth_spaces(self):
+        assert cleaner.collapse_spaces("hello\u3000\u3000world") == "hello world"
+
+    def test_collapse_nonbreaking_space(self):
+        assert cleaner.collapse_spaces("hello\u00a0world") == "hello world"
+
+    def test_collapse_multiple_nonbreaking_spaces(self):
+        assert cleaner.collapse_spaces("hello\u00a0\u00a0world") == "hello world"
+
+    def test_collapse_mixed_spaces(self):
+        assert cleaner.collapse_spaces("hello \u3000\u00a0 world") == "hello world"
+
+    def test_collapse_include_tabs_false(self):
+        assert (
+            cleaner.collapse_spaces("hello\tworld", include_tabs=False)
+            == "hello\tworld"
+        )
+
+    def test_collapse_include_tabs_true(self):
+        assert (
+            cleaner.collapse_spaces("hello\t\tworld", include_tabs=True)
+            == "hello world"
+        )
+
 
 class TestRemoveNewlines:
     """Tests for remove_newlines function."""
@@ -52,6 +79,24 @@ class TestRemoveNewlines:
 
     def test_remove_custom_replacement(self):
         assert cleaner.remove_newlines("hello\nworld", replacement="-") == "hello-world"
+
+    def test_remove_vertical_tab(self):
+        assert cleaner.remove_newlines("hello\u000bworld") == "hello world"
+
+    def test_remove_form_feed(self):
+        assert cleaner.remove_newlines("hello\u000cworld") == "hello world"
+
+    def test_remove_nel(self):
+        assert cleaner.remove_newlines("hello\u0085world") == "hello world"
+
+    def test_remove_line_separator(self):
+        assert cleaner.remove_newlines("hello\u2028world") == "hello world"
+
+    def test_remove_paragraph_separator(self):
+        assert cleaner.remove_newlines("hello\u2029world") == "hello world"
+
+    def test_remove_mixed_newlines(self):
+        assert cleaner.remove_newlines("hello\n\r\u2028world") == "hello world"
 
 
 class TestNormalizeWhitespace:
@@ -131,6 +176,83 @@ class TestTruncateWhitespace:
             cleaner.truncate_whitespace("hello world", max_consecutive=2)
             == "hello world"
         )
+
+    def test_truncate_fullwidth_space(self):
+        assert (
+            cleaner.truncate_whitespace("hello\u3000\u3000world", max_consecutive=1)
+            == "hello world"
+        )
+
+    def test_truncate_nonbreaking_space(self):
+        assert (
+            cleaner.truncate_whitespace("hello\u00a0\u00a0world", max_consecutive=1)
+            == "hello world"
+        )
+
+    def test_truncate_mixed_spaces(self):
+        assert (
+            cleaner.truncate_whitespace("hello \u3000\u00a0 world", max_consecutive=1)
+            == "hello world"
+        )
+
+    def test_truncate_max_consecutive_zero(self):
+        assert (
+            cleaner.truncate_whitespace("hello    world", max_consecutive=0)
+            == "helloworld"
+        )
+
+    def test_truncate_max_consecutive_zero_fullwidth(self):
+        assert (
+            cleaner.truncate_whitespace("hello\u3000world", max_consecutive=0)
+            == "helloworld"
+        )
+
+    def test_truncate_max_consecutive_zero_nonbreaking(self):
+        assert (
+            cleaner.truncate_whitespace("hello\u00a0world", max_consecutive=0)
+            == "helloworld"
+        )
+
+    def test_truncate_invalid_negative(self):
+        try:
+            cleaner.truncate_whitespace("hello world", max_consecutive=-1)
+            assert False, "Should raise ValueError"
+        except ValueError:
+            pass
+
+
+class TestRemoveInvisibleChars:
+    """Tests for remove_invisible_chars function."""
+
+    def test_remove_zero_width_space(self):
+        assert cleaner.remove_invisible_chars("hello\u200bworld") == "helloworld"
+
+    def test_remove_zero_width_non_joiner(self):
+        assert cleaner.remove_invisible_chars("hello\u200cworld") == "helloworld"
+
+    def test_remove_zero_width_joiner(self):
+        assert cleaner.remove_invisible_chars("hello\u200dworld") == "helloworld"
+
+    def test_remove_left_to_right_mark(self):
+        assert cleaner.remove_invisible_chars("hello\u200eworld") == "helloworld"
+
+    def test_remove_right_to_left_mark(self):
+        assert cleaner.remove_invisible_chars("hello\u200fworld") == "helloworld"
+
+    def test_remove_bom(self):
+        assert cleaner.remove_invisible_chars("hello\ufeffworld") == "helloworld"
+
+    def test_remove_soft_hyphen(self):
+        assert cleaner.remove_invisible_chars("hello\u00adworld") == "helloworld"
+
+    def test_remove_multiple_invisible(self):
+        assert (
+            cleaner.remove_invisible_chars("he\u200b\u200c\u200dl\u200e\u200frld")
+            == "heworld"
+        )
+
+    def test_no_invisible_chars(self):
+        assert cleaner.remove_invisible_chars("hello world") == "hello world"
 
 
 class TestCleanText:
