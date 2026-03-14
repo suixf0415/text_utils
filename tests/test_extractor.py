@@ -41,6 +41,42 @@ class TestExtractPhones:
         result = extractor.extract_phones(text, region="us")
         assert len(result) >= 1
 
+    def test_extract_cn_landline_with_dash(self):
+        text = "Call: 010-12345678 or 021-87654321"
+        result = extractor.extract_phones(text, region="cn")
+        assert "010-12345678" in result
+        assert "021-87654321" in result
+
+    def test_extract_cn_landline_with_space(self):
+        text = "Call: 021 87654321 or 0755 12345678"
+        result = extractor.extract_phones(text, region="cn")
+        assert "021 87654321" in result
+        assert "0755 12345678" in result
+
+    def test_extract_cn_mobile_with_dash(self):
+        text = "Call: 138-1234-5678 or 199-1234-5678"
+        result = extractor.extract_phones(text, region="cn")
+        assert "138-1234-5678" in result
+        assert "199-1234-5678" in result
+
+    def test_extract_cn_mobile_with_space(self):
+        text = "Call: 138 1234 5678 or 199 1234 5678"
+        result = extractor.extract_phones(text, region="cn")
+        assert "138 1234 5678" in result
+        assert "199 1234 5678" in result
+
+    def test_extract_cn_international_with_plus(self):
+        text = "Call: +86 138 1234 5678 or +86-138-1234-5678"
+        result = extractor.extract_phones(text, region="cn")
+        assert "+86 138 1234 5678" in result
+        assert "+86-138-1234-5678" in result
+
+    def test_extract_cn_international_landline(self):
+        text = "Call: +86 10 12345678 or +86-21-87654321"
+        result = extractor.extract_phones(text, region="cn")
+        assert "+86 10 12345678" in result
+        assert "+86-21-87654321" in result
+
 
 class TestExtractUrls:
     """Tests for extract_urls function."""

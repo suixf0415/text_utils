@@ -6,7 +6,7 @@ from typing import List
 
 EMAIL_PATTERN = r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
 
-PHONE_CN_PATTERN = r"(?:\+86)?1[3-9]\d{9}"
+PHONE_CN_PATTERN = r"(?:\+\d{1,3}[\s\-]*)?1[3-9]\d(?:[\-\s]?\d{4}){2}|(?:\+\d{1,3}[\s\-]*)?\d{2,4}[\-\s]?\d{7,8}"
 
 PHONE_US_PATTERN = r"(?:\+1)?(?:\([0-9]{3}\)|[0-9]{3})[-.\s]?[0-9]{3}[-.\s]?[0-9]{4}"
 
