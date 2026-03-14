@@ -3,6 +3,11 @@
 import re
 
 
+CJK_SPACE = "\u3000"
+NBSP = "\u00a0"
+WHITESPACE_CHARS = r" [\t\u3000\u00A0]"
+
+
 def strip_whitespace(text: str) -> str:
     """Remove leading and trailing whitespace from text.
 
@@ -15,16 +20,19 @@ def strip_whitespace(text: str) -> str:
     return text.strip()
 
 
-def collapse_spaces(text: str) -> str:
+def collapse_spaces(text: str, include_tabs: bool = False) -> str:
     """Collapse multiple consecutive spaces into a single space.
 
     Args:
         text: Input text to clean.
+        include_tabs: Whether to also collapse tabs (default: False).
 
     Returns:
         Text with multiple spaces replaced by single space.
     """
-    return re.sub(r" +", " ", text)
+    if include_tabs:
+        return re.sub(r"[ \t\u3000\u00A0]+", " ", text)
+    return re.sub(r"[ \u3000\u00A0]+", " ", text)
 
 
 def remove_newlines(text: str, replacement: str = " ") -> str:
@@ -37,7 +45,7 @@ def remove_newlines(text: str, replacement: str = " ") -> str:
     Returns:
         Text with newlines replaced.
     """
-    return re.sub(r"[\n\r]+", replacement, text)
+    return re.sub(r"[\n\r\u0085\u2028\u2029]+", replacement, text)
 
 
 def normalize_whitespace(text: str) -> str:
@@ -95,7 +103,37 @@ def remove_line_breaks(text: str, replacement: str = " ") -> str:
     Returns:
         Text with line breaks replaced.
     """
-    return text.replace("\n", replacement).replace("\r", replacement)
+    return (
+        text.replace("\r\n", replacement)
+        .replace("\r", replacement)
+        .replace("\n", replacement)
+    )
+
+
+def remove_invisible_chars(text: str) -> str:
+    """Remove invisible/zero-width characters from text.
+
+    Removes zero-width space (\\u200B), zero-width joiner (\\u200D),
+    zero-width non-joiner (\\u200C), left-to-right mark (\\u200E),
+    right-to-left mark (\\u200F), and other invisible characters.
+
+    Args:
+        text: Input text.
+
+    Returns:
+        Text with invisible characters removed.
+    """
+    invisible_chars = [
+        "\u200b",
+        "\u200c",
+        "\u200d",
+        "\u200e",
+        "\u200f",
+        "\ufeff",
+    ]
+    for char in invisible_chars:
+        text = text.replace(char, "")
+    return text
 
 
 def truncate_whitespace(text: str, max_consecutive: int = 1) -> str:
@@ -108,7 +146,11 @@ def truncate_whitespace(text: str, max_consecutive: int = 1) -> str:
     Returns:
         Text with limited consecutive whitespace.
     """
-    pattern = r" {%d,}" % (max_consecutive + 1)
+    if max_consecutive < 0:
+        raise ValueError("max_consecutive must be non-negative")
+    if max_consecutive == 0:
+        return re.sub(r"[ \t\u3000\u00A0\n\r]+", "", text)
+    pattern = r"[ \t\u3000\u00A0]{%d,}" % (max_consecutive + 1)
     return re.sub(pattern, " " * max_consecutive, text)
 
 
