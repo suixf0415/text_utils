@@ -194,6 +194,13 @@ def create_parser() -> argparse.ArgumentParser:
     number_parser.add_argument("--input-file", help="Input file")
     number_parser.add_argument("--output-file", help="Output file")
 
+    # Join command (inverse of line split)
+    join_parser = subparsers.add_parser("join", help="Join lines with separator")
+    join_parser.add_argument("input", nargs="?", help="Input text")
+    join_parser.add_argument("-s", "--separator", default=" ", help="Separator string")
+    join_parser.add_argument("--input-file", help="Input file")
+    join_parser.add_argument("--output-file", help="Output file")
+
     # Extraction commands
     email_parser = subparsers.add_parser("email", help="Extract email addresses")
     email_parser.add_argument("input", nargs="?", help="Input text")
@@ -409,6 +416,12 @@ def main() -> int:
             result = line_ops.number_lines(
                 text, start=getattr(args, "start", 1), width=getattr(args, "width", 0)
             )
+            write_output(result, args.output_file)
+
+        elif args.command == "join":
+            text = get_input_text(args)
+            separator = getattr(args, "separator", " ")
+            result = line_ops.join_lines(text, separator)
             write_output(result, args.output_file)
 
         elif args.command == "email":
