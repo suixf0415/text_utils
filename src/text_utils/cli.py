@@ -4,7 +4,7 @@ import argparse
 import sys
 from typing import Optional
 
-from text_utils import cleaner, formatter, regex_tool
+from text_utils import cleaner, formatter, regex_tool, line_ops
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -141,6 +141,59 @@ def create_parser() -> argparse.ArgumentParser:
     extract_parser.add_argument("--input-file", help="Input file")
     extract_parser.add_argument("--output-file", help="Output file")
 
+    # Line operation commands
+    dedup_parser = subparsers.add_parser("dedup", help="Remove duplicate lines")
+    dedup_parser.add_argument("input", nargs="?", help="Input text")
+    dedup_parser.add_argument(
+        "-i", "--ignore-case", action="store_true", help="Ignore case when comparing"
+    )
+    dedup_parser.add_argument("--input-file", help="Input file")
+    dedup_parser.add_argument("--output-file", help="Output file")
+
+    sort_parser = subparsers.add_parser("sort", help="Sort lines")
+    sort_parser.add_argument("input", nargs="?", help="Input text")
+    sort_parser.add_argument(
+        "-r", "--reverse", action="store_true", help="Sort in reverse order"
+    )
+    sort_parser.add_argument(
+        "-n", "--numeric", action="store_true", help="Sort numerically"
+    )
+    sort_parser.add_argument("--input-file", help="Input file")
+    sort_parser.add_argument("--output-file", help="Output file")
+
+    shuffle_parser = subparsers.add_parser("shuffle", help="Randomly shuffle lines")
+    shuffle_parser.add_argument("input", nargs="?", help="Input text")
+    shuffle_parser.add_argument("--input-file", help="Input file")
+    shuffle_parser.add_argument("--output-file", help="Output file")
+
+    reverse_parser = subparsers.add_parser("reverse", help="Reverse line order")
+    reverse_parser.add_argument("input", nargs="?", help="Input text")
+    reverse_parser.add_argument("--input-file", help="Input file")
+    reverse_parser.add_argument("--output-file", help="Output file")
+
+    filter_parser = subparsers.add_parser("filter", help="Filter lines by pattern")
+    filter_parser.add_argument("pattern", help="Regular expression pattern")
+    filter_parser.add_argument("input", nargs="?", help="Input text")
+    filter_parser.add_argument(
+        "-i", "--ignore-case", action="store_true", help="Ignore case"
+    )
+    filter_parser.add_argument(
+        "-v", "--invert", action="store_true", help="Invert match"
+    )
+    filter_parser.add_argument("--input-file", help="Input file")
+    filter_parser.add_argument("--output-file", help="Output file")
+
+    number_parser = subparsers.add_parser("number", help="Add line numbers")
+    number_parser.add_argument("input", nargs="?", help="Input text")
+    number_parser.add_argument(
+        "-s", "--start", type=int, default=1, help="Starting number"
+    )
+    number_parser.add_argument(
+        "-w", "--width", type=int, default=0, help="Number width"
+    )
+    number_parser.add_argument("--input-file", help="Input file")
+    number_parser.add_argument("--output-file", help="Output file")
+
     return parser
 
 
@@ -273,6 +326,49 @@ def main() -> int:
                 ignore_case=getattr(args, "ignore_case", False),
             )
             write_output("\n".join(result), args.output_file)
+
+        elif args.command == "dedup":
+            text = get_input_text(args)
+            result = line_ops.deduplicate(
+                text, case_sensitive=not getattr(args, "ignore_case", False)
+            )
+            write_output(result, args.output_file)
+
+        elif args.command == "sort":
+            text = get_input_text(args)
+            result = line_ops.sort_lines(
+                text,
+                reverse=getattr(args, "reverse", False),
+                numeric=getattr(args, "numeric", False),
+            )
+            write_output(result, args.output_file)
+
+        elif args.command == "shuffle":
+            text = get_input_text(args)
+            result = line_ops.shuffle_lines(text)
+            write_output(result, args.output_file)
+
+        elif args.command == "reverse":
+            text = get_input_text(args)
+            result = line_ops.reverse_lines(text)
+            write_output(result, args.output_file)
+
+        elif args.command == "filter":
+            text = get_input_text(args)
+            result = line_ops.filter_lines(
+                text,
+                args.pattern,
+                include=not getattr(args, "invert", False),
+                ignore_case=getattr(args, "ignore_case", False),
+            )
+            write_output(result, args.output_file)
+
+        elif args.command == "number":
+            text = get_input_text(args)
+            result = line_ops.number_lines(
+                text, start=getattr(args, "start", 1), width=getattr(args, "width", 0)
+            )
+            write_output(result, args.output_file)
 
         else:
             parser.print_help()
