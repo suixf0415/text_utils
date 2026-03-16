@@ -2,7 +2,6 @@
 
 import re
 
-
 CJK_SPACE = "\u3000"
 NBSP = "\u00a0"
 WHITESPACE_CHARS = r" [\t\u3000\u00A0]"
@@ -45,7 +44,7 @@ def remove_newlines(text: str, replacement: str = " ") -> str:
     Returns:
         Text with newlines replaced.
     """
-    return re.sub(r"[\n\r\u0085\u2028\u2029]+", replacement, text)
+    return re.sub(r"[\n\r\v\f\u0085\u2028\u2029]+", replacement, text)
 
 
 def normalize_whitespace(text: str) -> str:
@@ -124,6 +123,7 @@ def remove_invisible_chars(text: str) -> str:
         Text with invisible characters removed.
     """
     invisible_chars = [
+        "\u00ad",
         "\u200b",
         "\u200c",
         "\u200d",

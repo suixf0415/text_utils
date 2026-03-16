@@ -98,6 +98,29 @@ class TestRemoveNewlines:
     def test_remove_mixed_newlines(self):
         assert cleaner.remove_newlines("hello\n\r\u2028world") == "hello world"
 
+    def test_remove_vertical_tab_mixed(self):
+        assert cleaner.remove_newlines("hello\u000b\u000bworld") == "hello world"
+
+    def test_remove_form_feed_mixed(self):
+        assert cleaner.remove_newlines("hello\u000c\u000cworld") == "hello world"
+
+    def test_remove_vf_mixed(self):
+        assert cleaner.remove_newlines("hello\u000b\u000cworld") == "hello world"
+
+    def test_remove_all_newline_types(self):
+        text = "line1\nline2\rline3\u000bline4\u000cline5\r\nline6"
+        result = cleaner.remove_newlines(text)
+        assert "line1" in result
+        assert "line2" in result
+        assert "line3" in result
+        assert "line4" in result
+        assert "line5" in result
+        assert "line6" in result
+        assert "\n" not in result
+        assert "\r" not in result
+        assert "\v" not in result
+        assert "\f" not in result
+
 
 class TestNormalizeWhitespace:
     """Tests for normalize_whitespace function."""
@@ -245,10 +268,22 @@ class TestRemoveInvisibleChars:
     def test_remove_soft_hyphen(self):
         assert cleaner.remove_invisible_chars("hello\u00adworld") == "helloworld"
 
+    def test_remove_soft_hyphen_multiple(self):
+        assert cleaner.remove_invisible_chars("hel\u00adlo\u00adworld") == "helloworld"
+
+    def test_remove_all_invisible_mixed(self):
+        text = "a\u00adb\u200bc\u200cd\u200ed\u200fe\ufefff"
+        assert cleaner.remove_invisible_chars(text) == "abcddef"
+
+    def test_remove_invisible_with_text_middle(self):
+        assert cleaner.remove_invisible_chars("hello\u200bworld") == "helloworld"
+        assert cleaner.remove_invisible_chars("hello\u00adworld") == "helloworld"
+        assert cleaner.remove_invisible_chars("hello\u200cworld") == "helloworld"
+
     def test_remove_multiple_invisible(self):
         assert (
             cleaner.remove_invisible_chars("he\u200b\u200c\u200dl\u200e\u200frld")
-            == "heworld"
+            == "helrld"
         )
 
     def test_no_invisible_chars(self):
