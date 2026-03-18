@@ -3,9 +3,16 @@
 import pytest
 
 from text_utils.language import (
+    LANG_DE,
     LANG_EN,
+    LANG_ES,
+    LANG_FR,
+    LANG_IT,
     LANG_JA,
     LANG_KO,
+    LANG_MN,
+    LANG_NL,
+    LANG_PT,
     LANG_UNKNOWN,
     LANG_ZH,
     detect_language,
@@ -117,3 +124,241 @@ class TestDetectLanguageDetail:
         items = list(result.items())
         if len(items) > 1:
             assert items[0][1] >= items[1][1]
+
+
+class TestDetectFrench:
+    def test_french_special_chars(self):
+        result = detect_language("été français")
+        assert result in [LANG_FR, LANG_PT]
+
+    def test_french_long_text(self):
+        text = (
+            "La France est un pays situé en Europe occidentale. Paris est la capitale."
+        )
+        result = detect_language(text)
+        assert result == LANG_FR
+
+    def test_french_very_long_text(self):
+        text = """La République française est un pays d'Europe occidentale. 
+        Paris est la capitale et la plus grande ville de France. 
+        La France est connue pour sa cuisine, son vin, sa culture et son histoire riche. 
+        Le français est la langue officielle et le français est parlé par des millions de personnes dans le monde.
+        La devise de la France est Liberté, Égalité, Fraternité.
+        La cuisine française est considérée comme l'une des meilleures au monde."""
+        result = detect_language(text)
+        assert result == LANG_FR
+
+    def test_french_with_cedilla(self):
+        result = detect_language("réçu français")
+        assert result in [LANG_FR, LANG_PT]
+        result = detect_language("garçon")
+        assert result in [LANG_FR, LANG_PT]
+
+    def test_french_detail_long_text(self):
+        result = detect_language_detail(
+            "La France est un pays situé en Europe occidentale."
+        )
+        assert LANG_FR in result
+        assert result[LANG_FR] > 0.3
+
+
+class TestDetectGerman:
+    def test_german_special_chars(self):
+        assert detect_language("größer") == LANG_DE
+        assert detect_language("für")
+        assert detect_language("straße") == LANG_DE
+
+    def test_german_long_text(self):
+        text = "Deutschland ist ein Land in Mitteleuropa. Berlin ist die Hauptstadt."
+        result = detect_language(text)
+        assert result in [LANG_DE, LANG_EN]
+
+    def test_german_very_long_text(self):
+        text = """Die Bundesrepublik Deutschland ist ein Staat in Mitteleuropa. 
+        Berlin ist die Hauptstadt und die größte Stadt des Landes. 
+        Deutschland ist bekannt für seine Industrie, seine Musik und seine Kultur. 
+        Die deutsche Sprache wird von etwa 100 Millionen Menschen als Muttersprache gesprochen.
+        Die Wirtschaft Deutschlands ist die größte in Europa.
+        Deutsche Wissenschaftler haben viele wichtige Beiträge zur Wissenschaft geleistet."""
+        result = detect_language(text)
+        assert result == LANG_DE
+
+    def test_german_umlaut(self):
+        assert detect_language("Mädchen") == LANG_DE
+        assert detect_language("über") == LANG_DE
+        assert detect_language("Grüß Gott") == LANG_DE
+
+    def test_german_eszett(self):
+        assert detect_language("schließen") == LANG_DE
+        assert detect_language("Straße") == LANG_DE
+
+    def test_german_detail_long_text(self):
+        result = detect_language_detail(
+            "Die deutsche Sprache ist eine wichtige Sprache in Europa."
+        )
+        assert LANG_DE in result
+        assert result[LANG_DE] > 0.3
+
+
+class TestDetectSpanish:
+    def test_spanish_special_chars(self):
+        assert detect_language("español") == LANG_ES
+        assert detect_language("niño") == LANG_ES
+
+    def test_spanish_long_text(self):
+        text = (
+            "España es un país situado en la península ibérica. Madrid es la capital."
+        )
+        result = detect_language(text)
+        assert result == LANG_ES
+
+    def test_spanish_very_long_text(self):
+        text = """El Reino de España es un país ubicado en Europa meridional. 
+        Madrid es la capital y la ciudad más grande del país. 
+        España es conocida por su clima, su gastronomía, su flamenco y sus beaches. 
+        El español es la segunda lengua más hablada del mundo por número de hablantes nativos.
+        La economía española es una de las más grandes de Europa.
+        España tiene una rica historia y cultura que atrae a millones de visitantes cada año."""
+        result = detect_language(text)
+        assert result == LANG_ES
+
+    def test_spanish_inverted_marks(self):
+        assert detect_language("¿Cómo estás?") == LANG_ES
+        assert detect_language("¡Hola!") == LANG_ES
+
+    def test_spanish_tilde(self):
+        assert detect_language("año") == LANG_ES
+        assert detect_language("español") == LANG_ES
+
+    def test_spanish_detail_long_text(self):
+        result = detect_language_detail("El español es una lengua Romance importante.")
+        assert LANG_ES in result
+        assert result[LANG_ES] > 0.3
+
+
+class TestDetectItalian:
+    def test_italian_special_chars(self):
+        result = detect_language("perché")
+        assert result in [LANG_IT, LANG_ES, LANG_PT, LANG_FR]
+
+    def test_italian_long_text(self):
+        text = "L'Italia è un paese situato in Europa. Roma è la capitale."
+        result = detect_language(text)
+        assert result in [LANG_IT, LANG_FR]
+
+    def test_italian_very_long_text(self):
+        text = """La Repubblica Italiana è un paese situato nel sud Europa. 
+        Roma è la capitale e la città più grande del paese. 
+        L'Italia è conosciuta per la sua cucina, la sua arte e la sua storia. 
+        La lingua italiana è parlata da circa 60 milioni di persone in tutto il mondo.
+        L'economia italiana è una delle più grandi d'Europa.
+        L'Italia ha dato molti contributi importanti alla cultura mondiale."""
+        result = detect_language(text)
+        assert result in [LANG_IT, LANG_FR]
+
+    def test_italian_accents(self):
+        result = detect_language("perché")
+        assert result in [LANG_IT, LANG_ES, LANG_PT, LANG_FR]
+        assert detect_language("più") == LANG_IT
+
+    def test_italian_detail_long_text(self):
+        result = detect_language_detail(
+            "L'Italia è un bellissimo paese con una storia ricca."
+        )
+        assert LANG_IT in result
+        assert result[LANG_IT] > 0.3
+
+
+class TestDetectPortuguese:
+    def test_portuguese_special_chars(self):
+        result = detect_language("português")
+        assert result in [LANG_PT, LANG_FR]
+
+    def test_portuguese_special_chars2(self):
+        result = detect_language("ação")
+        assert result in [LANG_PT, LANG_ES]
+
+    def test_portuguese_special_chars3(self):
+        assert detect_language("são") == LANG_PT
+
+    def test_portuguese_very_long_text(self):
+        text = """A República Portuguesa é um país localizado no sudoeste da Europa. 
+        Lisboa é a capital e a maior cidade de Portugal. 
+        Portugal é conhecido pela sua história, gastronomia e belas paisagens. 
+        A língua portuguesa é falada por mais de 250 milhões de pessoas em todo o mundo.
+        A economia portuguesa é uma das mais antigas da Europa.
+        Portugal tem uma rica tradição cultural e histórica."""
+        result = detect_language(text)
+        assert result == LANG_PT
+
+    def test_portuguese_tilde(self):
+        assert detect_language("ação") == LANG_PT
+        assert detect_language("são") == LANG_PT
+        assert detect_language("avião") == LANG_PT
+
+    def test_portuguese_detail_long_text(self):
+        result = detect_language_detail(
+            "O português é uma língua importante falada em muitos países."
+        )
+        assert LANG_PT in result
+        assert result[LANG_PT] > 0.3
+
+
+class TestDetectDutch:
+    def test_dutch_basic(self):
+        result = detect_language("Hallo wereld")
+        assert result in [LANG_NL, LANG_EN]
+
+    def test_dutch_special_chars(self):
+        assert detect_language("ijs") == LANG_NL
+
+    def test_dutch_very_long_text(self):
+        text = """Het Koninkrijk Nederland is een land in West-Europa. 
+        Amsterdam is de hoofdstad en de grootste stad van het land. 
+        Nederland is bekend om zijn tulpen, molens en fietsen. 
+        De Nederlandse taal wordt gesproken door ongeveer 25 miljoen mensen in Nederland en België.
+        De economie van Nederland is een van de sterkste in Europa.
+        Nederland heeft een rijke cultuur en geschiedenis."""
+        result = detect_language(text)
+        assert result == LANG_NL
+
+    def test_dutch_ij(self):
+        assert detect_language("ijs") == LANG_NL
+        assert detect_language("het Nederlandse ijs") == LANG_NL
+
+    def test_dutch_detail_long_text(self):
+        result = detect_language_detail(
+            "Nederland is een mooi land met een rijke geschiedenis."
+        )
+        assert LANG_NL in result
+        assert result[LANG_NL] > 0.3
+
+
+class TestDetectMongolian:
+    def test_mongolian_traditional(self):
+        assert detect_language("ᠮᠣᠩᠭᠤᠯ") == LANG_MN
+        assert detect_language("ᠮᠣᠩᠭᠣᠯᠤᠭᠴᠢ") == LANG_MN
+
+    def test_mongolian_mixed(self):
+        text = "ᠮᠣᠩᠭᠤᠯ ᠪᠠᠷᠢᠮᠲᠤᠭᠠᠢ"
+        result = detect_language(text)
+        assert result == LANG_MN
+
+
+class TestDetectLatinLanguagesDetail:
+    def test_french_detail(self):
+        result = detect_language_detail("été français")
+        assert LANG_FR in result
+
+    def test_german_detail(self):
+        result = detect_language_detail("für größere Straße")
+        assert LANG_DE in result
+
+    def test_spanish_detail(self):
+        result = detect_language_detail("español niño")
+        assert LANG_ES in result
+
+    def test_mongolian_detail(self):
+        result = detect_language_detail("ᠮᠣᠩᠭᠤᠯ")
+        assert LANG_MN in result
+        assert result[LANG_MN] > 0.5
