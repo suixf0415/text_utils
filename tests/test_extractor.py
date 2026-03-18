@@ -145,6 +145,36 @@ class TestExtractIPv6:
         result = extractor.extract_ipv6(text)
         assert len(result) >= 1
 
+    def test_extract_compressed(self):
+        text = "Server: 2001:db8::1"
+        result = extractor.extract_ipv6(text)
+        assert "2001:db8::1" in result
+
+    def test_extract_loopback(self):
+        text = "localhost is ::1"
+        result = extractor.extract_ipv6(text)
+        assert "::1" in result
+
+    def test_extract_unspecified(self):
+        text = "default route is ::"
+        result = extractor.extract_ipv6(text)
+        assert "::" in result
+
+    def test_extract_ipv4_mapped(self):
+        text = "mapped: ::ffff:192.0.2.1"
+        result = extractor.extract_ipv6(text)
+        assert "::ffff:192.0.2.1" in result
+
+    def test_extract_link_local(self):
+        text = "fe80::1"
+        result = extractor.extract_ipv6(text)
+        assert "fe80::1" in result
+
+    def test_extract_trailing_colons(self):
+        text = "doc: 2001:db8::"
+        result = extractor.extract_ipv6(text)
+        assert "2001:db8::" in result
+
 
 class TestExtractIDCards:
     """Tests for extract_id_cards function."""

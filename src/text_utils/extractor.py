@@ -1,6 +1,7 @@
 """Text extraction utilities for common patterns like emails, phones, URLs, etc."""
 
 import re
+from ipaddress import ip_address, IPv6Address
 from typing import List
 
 EMAIL_PATTERN = r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
@@ -13,7 +14,7 @@ URL_PATTERN = r'https?://[^\s<>"{}|\\^`\[\]]+'
 
 IPV4_PATTERN = r"\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b"
 
-IPV6_PATTERN = r"(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}"
+IPV6_PATTERN = r"(?:[0-9a-fA-F]{1,4}:|:|::)[0-9a-fA-F:.]*(?:%[0-9a-zA-Z]+)?"
 
 ID_CARD_CN_PATTERN = (
     r"[1-9]\d{5}(?:19|20)\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])\d{3}[\dXx]"
@@ -112,7 +113,18 @@ def extract_ipv6(text: str, deduplicate: bool = True) -> List[str]:
     Returns:
         List of IPv6 addresses.
     """
-    ips = re.findall(IPV6_PATTERN, text, re.IGNORECASE)
+    candidates = re.findall(IPV6_PATTERN, text, re.IGNORECASE)
+    ips = []
+    for cand in candidates:
+        if len(cand) < 2:
+            continue
+        addr_part = cand.split("%")[0] if "%" in cand else cand
+        try:
+            addr = ip_address(addr_part)
+            if isinstance(addr, IPv6Address):
+                ips.append(cand)
+        except ValueError:
+            pass
     if deduplicate:
         return list(dict.fromkeys(ips))
     return ips
