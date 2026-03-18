@@ -13,6 +13,7 @@ LANG_ZH = "zh"
 LANG_JA = "ja"
 LANG_KO = "ko"
 LANG_MN = "mn"
+LANG_MN_CYRIL = "mn-cyrl"
 LANG_UNKNOWN = "unknown"
 
 _LATIN_LANG = {LANG_EN, LANG_FR, LANG_DE, LANG_ES, LANG_IT, LANG_PT, LANG_NL}
@@ -25,6 +26,27 @@ _LATIN_SPECIAL_CHARS: Dict[str, Tuple[str, ...]] = {
     LANG_PT: ("ç", "ã", "õ", "á", "é", "í", "ó", "ú"),
     LANG_NL: ("ij", "ö", "ë", "ï"),
 }
+
+_CYRILLIC_MONGOL_CHARS = ("ө", "Ө", "ү", "Ү")
+
+_CYRILLIC_RANGES = (
+    (0x0400, 0x04FF),
+    (0x0500, 0x052F),
+    (0x1C80, 0x1CBF),
+)
+
+_CYRILLIC_MONGOL_KEYWORDS = (
+    "монгол",
+    "улс",
+    "хэл",
+    "аймг",
+    "аймаг",
+    "орон",
+    "нутаг",
+    "засаг",
+    "улсын",
+    "монголын",
+)
 
 _LATIN_KEYWORDS: Dict[str, Tuple[str, ...]] = {
     LANG_EN: (
@@ -704,6 +726,18 @@ def detect_language(text: str) -> str:
     if mongolian_count / total_chars > 0.2:
         return LANG_MN
 
+    cyrillic_count = _count_chars_in_ranges(clean_text, _CYRILLIC_RANGES)
+    mongolian_cyrillic_chars_count = sum(
+        clean_text.count(char) for char in _CYRILLIC_MONGOL_CHARS
+    )
+    if cyrillic_count > 0:
+        text_lower = clean_text.lower()
+        mongolian_keyword_count = sum(
+            text_lower.count(kw) for kw in _CYRILLIC_MONGOL_KEYWORDS
+        )
+        if mongolian_cyrillic_chars_count > 0 or mongolian_keyword_count >= 2:
+            return LANG_MN_CYRIL
+
     hiragana_count = _count_chars_in_ranges(clean_text, (_HIRAGANA_RANGE,))
     katakana_count = _count_chars_in_ranges(clean_text, (_KATAKANA_RANGE,))
     japanese_script_count = hiragana_count + katakana_count
@@ -779,6 +813,18 @@ def detect_language_detail(text: str) -> Dict[str, float]:
 
     if mongolian_count > 0:
         result[LANG_MN] = min(mongolian_count / total_chars, 1.0)
+
+    cyrillic_count = _count_chars_in_ranges(clean_text, _CYRILLIC_RANGES)
+    mongolian_cyrillic_chars_count = sum(
+        clean_text.count(char) for char in _CYRILLIC_MONGOL_CHARS
+    )
+    if cyrillic_count > 0:
+        text_lower = clean_text.lower()
+        mongolian_keyword_count = sum(
+            text_lower.count(kw) for kw in _CYRILLIC_MONGOL_KEYWORDS
+        )
+        if mongolian_cyrillic_chars_count > 0 or mongolian_keyword_count >= 2:
+            result[LANG_MN_CYRIL] = 0.8
 
     hiragana_count = _count_chars_in_ranges(clean_text, (_HIRAGANA_RANGE,))
     katakana_count = _count_chars_in_ranges(clean_text, (_KATAKANA_RANGE,))

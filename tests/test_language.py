@@ -2,23 +2,7 @@
 
 import pytest
 
-from text_utils.language import (
-    LANG_DE,
-    LANG_EN,
-    LANG_ES,
-    LANG_FR,
-    LANG_IT,
-    LANG_JA,
-    LANG_KO,
-    LANG_MN,
-    LANG_NL,
-    LANG_PT,
-    LANG_UNKNOWN,
-    LANG_ZH,
-    detect_language,
-    detect_language_detail,
-)
-
+from text_utils.language import *
 
 class TestDetectLanguage:
     def test_chinese(self):
@@ -362,3 +346,23 @@ class TestDetectLatinLanguagesDetail:
         result = detect_language_detail("ᠮᠣᠩᠭᠤᠯ")
         assert LANG_MN in result
         assert result[LANG_MN] > 0.5
+
+
+class TestDetectMongolianCyrillic:
+    def test_mongolian_cyrillic_basic(self):
+        assert detect_language("Монгол хэл") == LANG_MN_CYRIL
+
+    def test_mongolian_cyrillic_with_ou(self):
+        assert detect_language("өдөр") == LANG_MN_CYRIL
+
+    def test_mongolian_cyrillic_with_u(self):
+        assert detect_language("үсэг") == LANG_MN_CYRIL
+
+    def test_mongolian_cyrillic_mixed(self):
+        text = "Монгол Улс бол Ази тивд байрлах улс юм"
+        assert detect_language(text) == LANG_MN_CYRIL
+
+    def test_mongolian_cyrillic_detail(self):
+        result = detect_language_detail("Монгол хэл")
+        assert LANG_MN_CYRIL in result
+        assert result[LANG_MN_CYRIL] > 0.5
