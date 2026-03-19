@@ -72,15 +72,37 @@ class TestExtractPhones:
         assert "+86-138-1234-5678" in result
 
     def test_extract_cn_international_landline(self):
-        text = "Call: +86 10 12345678 or +86-21-87654321"
+        text = "Call: +86 010 12345678 or +86-021-87654321"
         result = extractor.extract_phones(text, region="cn")
-        assert "+86 10 12345678" in result
-        assert "+86-21-87654321" in result
+        assert "+86 010 12345678" in result
+        assert "+86-021-87654321" in result
 
     def test_extract_cn_landline_no_separator(self):
-        text = "Call: 02187654321 or 075512345678"
+        text = "02187654321 or 075512345678"
         result = extractor.extract_phones(text, region="cn")
         assert "02187654321" in result
+        assert "075512345678" in result
+
+    def test_landline_area_code_must_start_with_zero(self):
+        text = "12345678901"
+        result = extractor.extract_phones(text, region="cn")
+        assert result == []
+
+    def test_landline_invalid_area_code_rejected(self):
+        text = "12-12345678 or 13-87654321"
+        result = extractor.extract_phones(text, region="cn")
+        assert result == []
+
+    def test_landline_valid_3digit_area_code(self):
+        text = "01012345678 or 02087654321"
+        result = extractor.extract_phones(text, region="cn")
+        assert "01012345678" in result
+        assert "02087654321" in result
+
+    def test_landline_valid_4digit_area_code(self):
+        text = "07911234567 or 075512345678"
+        result = extractor.extract_phones(text, region="cn")
+        assert "07911234567" in result
         assert "075512345678" in result
 
     def test_extract_cn_400_service(self):
