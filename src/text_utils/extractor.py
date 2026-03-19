@@ -28,6 +28,8 @@ DATE_ISO_PATTERN = r"\d{4}-\d{2}-\d{2}"
 
 DATE_CN_PATTERN = r"\d{4}年\d{1,2}月\d{1,2}日"
 
+BANK_CARD_PATTERN = r"\b\d[\d\s\-]{11,17}\d\b"
+
 
 def extract_emails(text: str, deduplicate: bool = True) -> List[str]:
     """Extract email addresses from text.
@@ -246,6 +248,56 @@ def extract_words(
     if deduplicate:
         return list(dict.fromkeys(words))
     return words
+
+
+def luhn_check(card_number: str) -> bool:
+    """Check if a card number passes the Luhn algorithm.
+
+    Args:
+        card_number: Card number string (digits only).
+
+    Returns:
+        True if valid, False otherwise.
+    """
+    digits = [int(d) for d in card_number if d.isdigit()]
+    if not digits:
+        return False
+
+    checksum = 0
+    for i, digit in enumerate(reversed(digits)):
+        if i % 2 == 1:
+            digit *= 2
+            if digit > 9:
+                digit -= 9
+        checksum += digit
+    return checksum % 10 == 0
+
+
+def extract_bank_cards(
+    text: str, validate: bool = True, deduplicate: bool = True
+) -> List[str]:
+    """Extract bank card numbers from text.
+
+    Args:
+        text: Input text.
+        validate: Whether to filter using Luhn algorithm.
+        deduplicate: Whether to remove duplicates.
+
+    Returns:
+        List of bank card numbers (digits only).
+    """
+    candidates = re.findall(BANK_CARD_PATTERN, text)
+    cards = []
+    for cand in candidates:
+        digits_only = re.sub(r"[\s\-]", "", cand)
+        if len(digits_only) < 13 or len(digits_only) > 19:
+            continue
+        if not validate or luhn_check(digits_only):
+            cards.append(digits_only)
+
+    if deduplicate:
+        return list(dict.fromkeys(cards))
+    return cards
 
 
 def extract_hex_colors(text: str, deduplicate: bool = True) -> List[str]:

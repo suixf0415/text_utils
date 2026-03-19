@@ -242,6 +242,16 @@ def create_parser() -> argparse.ArgumentParser:
     ip_parser.add_argument("--input-file", help="Input file")
     ip_parser.add_argument("--output-file", help="Output file")
 
+    bankcard_parser = subparsers.add_parser(
+        "bankcard", help="Extract bank card numbers (with Luhn validation)"
+    )
+    bankcard_parser.add_argument("input", nargs="?", help="Input text")
+    bankcard_parser.add_argument(
+        "--no-validate", action="store_true", help="Skip Luhn validation"
+    )
+    bankcard_parser.add_argument("--input-file", help="Input file")
+    bankcard_parser.add_argument("--output-file", help="Output file")
+
     return parser
 
 
@@ -466,6 +476,12 @@ def main() -> int:
                 result = extractor.extract_ipv6(text)
             else:
                 result = extractor.extract_ipv4(text) + extractor.extract_ipv6(text)
+            write_output("\n".join(result), args.output_file)
+
+        elif args.command == "bankcard":
+            text = get_input_text(args)
+            validate = not getattr(args, "no_validate", False)
+            result = extractor.extract_bank_cards(text, validate=validate)
             write_output("\n".join(result), args.output_file)
 
         else:

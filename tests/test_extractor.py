@@ -292,3 +292,130 @@ class TestExtractHexColors:
         text = "Color: #ff0000"
         result = extractor.extract_hex_colors(text)
         assert "#ff0000" in result
+
+
+class TestLuhnCheck:
+    """Tests for luhn_check function."""
+
+    def test_valid_card(self):
+        assert extractor.luhn_check("4532015112830366") is True
+
+    def test_invalid_card(self):
+        assert extractor.luhn_check("4532015112830367") is False
+
+    def test_empty_string(self):
+        assert extractor.luhn_check("") is False
+
+    def test_non_digit(self):
+        assert extractor.luhn_check("abc") is False
+
+    def test_13_digit_card(self):
+        assert extractor.luhn_check("4000000000006") is True
+
+    def test_14_digit_card(self):
+        assert extractor.luhn_check("30000000000004") is True
+
+    def test_15_digit_card(self):
+        assert extractor.luhn_check("371449635398431") is True
+
+    def test_18_digit_card(self):
+        assert extractor.luhn_check("601111111111111114") is True
+
+    def test_single_digit(self):
+        assert extractor.luhn_check("0") is True
+
+    def test_two_digits(self):
+        assert extractor.luhn_check("55") is False
+
+    def test_mixed_valid_invalid(self):
+        assert extractor.luhn_check("4532015112830367") is False
+
+
+class TestExtractBankCards:
+    """Tests for extract_bank_cards function."""
+
+    def test_extract_valid_card(self):
+        text = "Card: 4532015112830366"
+        result = extractor.extract_bank_cards(text)
+        assert "4532015112830366" in result
+
+    def test_extract_invalid_card_filtered(self):
+        text = "Card: 4532015112830367"
+        result = extractor.extract_bank_cards(text, validate=True)
+        assert result == []
+
+    def test_extract_invalid_card_included_without_validation(self):
+        text = "Card: 4532015112830367"
+        result = extractor.extract_bank_cards(text, validate=False)
+        assert "4532015112830367" in result
+
+    def test_extract_with_spaces(self):
+        text = "Card: 4532 0151 1283 0366"
+        result = extractor.extract_bank_cards(text)
+        assert "4532015112830366" in result
+
+    def test_extract_with_dashes(self):
+        text = "Card: 4532-0151-1283-0366"
+        result = extractor.extract_bank_cards(text)
+        assert "4532015112830366" in result
+
+    def test_extract_deduplicate(self):
+        text = "Card: 4532015112830366 and 4532015112830366"
+        result = extractor.extract_bank_cards(text)
+        assert len(result) == 1
+
+    def test_extract_16_digit(self):
+        text = "Bank card number: 5425233430109903"
+        result = extractor.extract_bank_cards(text)
+        assert "5425233430109903" in result
+
+    def test_extract_19_digit(self):
+        text = "Card: 6011111111111117000"
+        result = extractor.extract_bank_cards(text)
+        assert "6011111111111117000" in result
+
+    def test_extract_13_digit(self):
+        text = "Card: 4000000000006"
+        result = extractor.extract_bank_cards(text)
+        assert "4000000000006" in result
+
+    def test_extract_14_digit(self):
+        text = "Card: 30000000000004"
+        result = extractor.extract_bank_cards(text)
+        assert "30000000000004" in result
+
+    def test_extract_15_digit(self):
+        text = "Card: 371449635398431"
+        result = extractor.extract_bank_cards(text)
+        assert "371449635398431" in result
+
+    def test_extract_17_digit(self):
+        text = "Card: 60111111111111113"
+        result = extractor.extract_bank_cards(text)
+        assert "60111111111111113" in result
+
+    def test_extract_18_digit(self):
+        text = "Card: 601111111111111114"
+        result = extractor.extract_bank_cards(text)
+        assert "601111111111111114" in result
+
+    def test_extract_invalid_length_12_filtered(self):
+        text = "Card: 123456789012"
+        result = extractor.extract_bank_cards(text)
+        assert result == []
+
+    def test_extract_invalid_length_20_filtered(self):
+        text = "Card: 12345678901234567890"
+        result = extractor.extract_bank_cards(text)
+        assert result == []
+
+    def test_extract_mixed_valid_invalid(self):
+        text = "Valid: 4532015112830366 Invalid: 4532015112830367"
+        result = extractor.extract_bank_cards(text)
+        assert len(result) == 1
+        assert "4532015112830366" in result
+
+    def test_extract_no_cards(self):
+        text = "No card numbers here: 1234"
+        result = extractor.extract_bank_cards(text)
+        assert result == []
